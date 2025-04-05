@@ -1,3 +1,27 @@
 # Movie-Recommendor-System
 
+Overview
+This project is a content-based movie recommendation system built using Python and Streamlit. The application suggests similar movies based on the user's selection, utilizing content similarity matrices to find the most relevant recommendations. For each recommendation, the system displays the movie title along with its poster image fetched from The Movie Database (TMDB) API.
+Features
+
+Interactive movie selection from a dropdown menu
+Content-based recommendation algorithm
+Visual display of movie posters
+Top 5 movie recommendations based on content similarity
+Error handling for API connection issues and missing posters
+
+Technologies Used
+
+Python: Core programming language
+Streamlit: Web application framework for creating the user interface
+NumPy & Pandas: Data manipulation and processing
+Pickle: Model serialization
+TMDB API: External API for fetching movie posters and information
+
+Installation
+Prerequisites
+
+Python 3.7 or higher
+Git
+
 ![image](https://github.com/user-attachments/assets/2d24778c-1b00-404f-8b2f-bd34cbcc6a62)
