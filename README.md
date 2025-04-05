@@ -26,16 +26,17 @@ TMDB API: External API for fetching movie posters and information
 
 How It Works
 
-Data Loading & Merging
-Combines credits and movie information into one dataset.
-Preprocessing
-Parses and extracts relevant info from JSON-like columns.
-Constructs a ‘tags’ column to consolidate relevant text features.
-Model Creation
-Applies CountVectorizer on the tags.
-Calculates cosine similarity across the movie vectors.
-Recommendation
-Given a movie title, returns the top 5 most similar movies.
+Data Loading & Merging: Combines credits and movie information into one dataset
+
+Preprocessing: Parses and extracts relevant info from JSON-like columns
+
+Tags Creation: Constructs a tags column to consolidate relevant text features
+
+Model Creation: Applies CountVectorizer on the tags
+
+Similarity Calculation: Calculates cosine similarity across the movie vectors
+
+Recommendation: Given a movie title, returns the top 5 most similar movies
 
 Installation
 Prerequisites
