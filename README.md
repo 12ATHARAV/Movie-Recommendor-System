@@ -12,11 +12,16 @@ Error handling for API connection issues and missing posters
 
 Technologies Used
 
-Python: Core programming language\n
-Streamlit: Web application framework for creating the user interface\n
-Scikit-learn (CountVectorizer, Cosine Similarity)
-NumPy & Pandas: Data manipulation and processing
-Pickle: Model serialization
+Python: Core programming language
+
+Streamlit: Web application framework for creating the user interface
+
+Scikit-learn: Used for CountVectorizer and Cosine Similarity
+
+NumPy & Pandas: For data manipulation and processing
+
+Pickle: For model serialization
+
 TMDB API: External API for fetching movie posters and information
 
 How It Works
