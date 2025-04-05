@@ -9,7 +9,7 @@ from requests.exceptions import ConnectionError
 
 
 def fetch_poster(movie_id):
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=97ba66eeaeb4313ff8c52d09f42fc649&language=en-US"
+    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=YOUR-API-KEY"
     try:
         for attempt in range(3):  # Retry up to 3 times
             response = requests.get(url)
