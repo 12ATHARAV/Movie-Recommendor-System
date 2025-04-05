@@ -12,8 +12,8 @@ Error handling for API connection issues and missing posters
 
 Technologies Used
 
-Python: Core programming language
-Streamlit: Web application framework for creating the user interface
+Python: Core programming language\n
+Streamlit: Web application framework for creating the user interface\n
 Scikit-learn (CountVectorizer, Cosine Similarity)
 NumPy & Pandas: Data manipulation and processing
 Pickle: Model serialization
@@ -23,15 +23,12 @@ How It Works
 
 Data Loading & Merging
 Combines credits and movie information into one dataset.
-
 Preprocessing
 Parses and extracts relevant info from JSON-like columns.
 Constructs a ‘tags’ column to consolidate relevant text features.
-
 Model Creation
 Applies CountVectorizer on the tags.
 Calculates cosine similarity across the movie vectors.
-
 Recommendation
 Given a movie title, returns the top 5 most similar movies.
 
