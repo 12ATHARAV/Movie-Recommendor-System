@@ -43,14 +43,14 @@
     <div id="loader">
       <div class="spinner"></div>
       <h2 style="margin:0; font-weight: 600; background: linear-gradient(135deg, #FF416C 0%, #8A2387 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">CineAI Recommender</h2>
-      <p style="color: #A0AEC0; font-size: 0.95rem; margin-top: 10px;">Loading AI Engine & Movie Matrices in WebAssembly...</p>
+      <p style="color: #A0AEC0; font-size: 0.95rem; margin-top: 10px;">Loading AI Engine & Fast Movie Matrix (270 KB)...</p>
     </div>
     <div id="root"></div>
     <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.63.1/build/stlite.js"></script>
     <script>
       stlite.mount(
         {
-          requirements: ["numpy", "pandas", "requests", "scikit-learn"],
+          requirements: ["numpy", "pandas", "requests"],
           entrypoint: "app.py",
           files: {
             "app.py": {
@@ -59,8 +59,8 @@
             "movies.pickle": {
               url: "https://raw.githubusercontent.com/12ATHARAV/Movie-Recommendor-System/main/movies.pickle"
             },
-            "similarity.pickle": {
-              url: "https://raw.githubusercontent.com/12ATHARAV/Movie-Recommendor-System/main/similarity.pickle"
+            "top_recs.pkl": {
+              url: "https://raw.githubusercontent.com/12ATHARAV/Movie-Recommendor-System/main/top_recs.pkl"
             }
           }
         },
@@ -73,7 +73,7 @@
           loader.style.opacity = "0";
           setTimeout(() => loader.remove(), 500);
         }
-      }, 4000);
+      }, 3500);
     </script>
   </body>
 </html>
