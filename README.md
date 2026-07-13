@@ -5,7 +5,7 @@
 <h1 align="center">CineAI | Movie Recommender System</h1>
 
 <p align="center">
-  <strong>Content-based machine learning movie recommendation engine powered by Cosine Similarity & TMDB live data.</strong>
+  <strong>Hybrid Dual-Engine Movie Recommendation Platform combining Custom Machine Learning Cosine Similarity & Live Global TMDB Discovery.</strong>
 </p>
 
 <p align="center">
@@ -23,37 +23,71 @@
 
 ## ⚡ Overview
 
-**CineAI** is an advanced content-based movie recommendation system built using Python, Scikit-Learn, and Streamlit. By analyzing cinematic DNA—including plot summaries (`overview`), cast, crew, genres, and keywords—the system computes a high-dimensional **Cosine Similarity Matrix** across thousands of films to instantly discover the top 5 most similar movies to your selection.
+**CineAI** is an advanced dual-mode movie recommendation application built with Python, Scikit-Learn, Streamlit, and The Movie Database (TMDB) API. It offers two distinct recommendation engines within a single unified interface:
 
-Every recommendation is enriched in real time with **The Movie Database (TMDB) API**, displaying high-definition posters, viewer ratings, release years, and detailed storylines.
+1. **🧠 Trained ML Engine (Offline Dataset — 4,800+ Movies):**  
+   Uses a custom-trained **Cosine Similarity** model over historical film metadata (`overview`, genres, keywords, cast, and crew) to recommend similar films from our ML dataset.
+2. **🌐 Live Global Search Engine (Any Movie up to 2026):**  
+   Allows users to search any movie title ever released worldwide and instantly fetch live recommendations directly from TMDB's global movie graph.
+
+Every recommendation is enriched in real-time with official high-definition movie posters, live viewer ratings (`vote_average`), release years, and detailed storyline overviews.
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
 | Feature | Description |
 |---------|-------------|
-| 🎯 **Content Similarity Engine** | Uses TF-IDF / CountVectorizer + Cosine Similarity over 4,800+ movies |
-| 🍿 **Live TMDB Metadata** | Fetches official posters, ratings (`vote_average`), release years, and plot overviews |
-| ⚡ **Optimized Matrix Loading** | Uses Float16 precision for ultra-fast startup (< 0.2s load time) |
-| 🎨 **Premium Cinema UI** | Glassmorphism movie cards, hover zoom effects, and responsive 5-column layout |
-| 🌐 **WebAssembly & Cloud Ready** | Runs via Streamlit Cloud or client-side inside the browser via **Stlite / WebAssembly** |
+| 🧠 **Trained ML Recommendation Engine** | Uses TF-IDF / CountVectorizer + Cosine Similarity over 4,809 curated movies |
+| 🌐 **Live Global Movie Search** | Search and discover recommendations for **any film ever released (up to 2026)** |
+| ⚡ **Ultra-Fast Startup (< 0.5s)** | Precomputed top-recommendation matrix compressed down to **270 KB** (160x faster loading) |
+| 🍿 **Live Real-Time TMDB Metadata** | Fetches official posters, live audience scores, release years, and plot overviews |
+| 🎨 **Premium Cinema UI** | Responsive glassmorphic movie cards, tabbed interface, and hover micro-animations |
+| 🌐 **100% Client-Side WebAssembly** | Runs entirely in your browser via **Stlite / Pyodide WebAssembly** on GitHub Pages |
 
 ---
 
 ## 🚀 Live Demo & Deployment
 
-### Option 1: Run in Browser (Stlite / WebAssembly)
-You can deploy and run this project **directly on GitHub Pages** with zero backend servers required using `index.html` (powered by Pyodide/Stlite).
+### Option 1: Run Instantly in Browser (GitHub Pages / Stlite WebAssembly)
+👉 **[https://12atharav.github.io/Movie-Recommendor-System/](https://12atharav.github.io/Movie-Recommendor-System/)**  
+*Runs full Python and Streamlit client-side inside your browser with zero backend server needed!*
 
 ### Option 2: Streamlit Community Cloud (1-Click Deploy)
 1. Fork this repository.
-2. Go to [share.streamlit.io](https://share.streamlit.io).
-3. Connect your GitHub repository and select `app.py` as the entrypoint.
+2. Visit [share.streamlit.io](https://share.streamlit.io/).
+3. Connect your fork and select `app.py` as your entry point.
 
 ---
 
-## 💻 Quick Start (Local Development)
+## 🏗️ System Architecture
+
+```
+                       +-----------------------------------+
+                       |         CineAI Web UI             |
+                       |       (Streamlit / Stlite)        |
+                       +-----------------+-----------------+
+                                         |
+               +-------------------------+-------------------------+
+               |                                                   |
+               v                                                   v
+  [Tab 1: Trained ML Engine]                       [Tab 2: Live Global Search]
+               |                                                   |
+  +------------v-------------+                      +--------------v-------------+
+  |  Load movies.pickle &    |                      | Query TMDB Live Search API |
+  |  Precomputed top_recs    |                      | (Any movie up to 2026)     |
+  +------------+-------------+                      +--------------+-------------+
+               |                                                   |
+               +-------------------------+-------------------------+
+                                         |
+                                         v
+                         [Live TMDB Metadata Enrichment]
+                     (Posters, Ratings, Years, Storylines)
+```
+
+---
+
+## 💻 Local Development & Setup
 
 ### Prerequisites
 - Python 3.8+
@@ -70,11 +104,11 @@ cd Movie-Recommendor-System
 pip install -r requirements.txt
 ```
 
-### 3. Run the App
+### 3. Launch the Application
 ```bash
 streamlit run app.py
 ```
-Open your browser at `http://localhost:8501`.
+Open your web browser at `http://localhost:8501`.
 
 ---
 
@@ -82,35 +116,14 @@ Open your browser at `http://localhost:8501`.
 
 ```
 Movie-Recommendor-System/
-|-- app.py                   # Streamlit web application & recommendation engine
-|-- index.html               # Stlite / WebAssembly entry point for browser hosting
+|-- app.py                   # Streamlit dual-tab application & hybrid recommender
+|-- index.html               # Stlite / WebAssembly entry point for browser deployment
 |-- requirements.txt         # Python package dependencies
-|-- movies.pickle            # Processed movie metadata dataframe
-|-- similarity.pickle        # Optimized Cosine Similarity matrix (Float16)
-+-- README.md                # Project documentation
+|-- movies.pickle            # Processed movie metadata dataframe (4,809 films)
+|-- top_recs.pkl             # Ultra-fast precomputed top-10 recommendations (270 KB)
+|-- similarity.pickle        # Full Float16 Cosine Similarity matrix fallback (44 MB)
++-- README.md                # Comprehensive project documentation
 ```
-
----
-
-## 🧠 Recommendation Algorithm
-
-```
-Raw TMDB Dataset --> Data Cleaning & Feature Engineering (Genres, Keywords, Cast, Director)
-                              |
-                              v
-                 CountVectorizer (Bag of Words)
-                              |
-                              v
-                 Cosine Similarity Calculation
-                              |
-                              v
-               4809 x 4809 Similarity Matrix
-```
-
-When a user selects a movie:
-1. The engine locates the index of the selected film in `movies.pickle`.
-2. Retrieves its pairwise similarity vector from `similarity.pickle`.
-3. Sorts all films in descending order of similarity score and returns the top 5 closest matches.
 
 ---
 
@@ -121,5 +134,5 @@ This project is licensed under the [MIT License](LICENSE).
 ---
 
 <p align="center">
-  <strong>⭐ Star this repo if you enjoyed the recommendations! ⭐</strong>
+  <strong>⭐ Star this repository if you found these recommendations helpful! ⭐</strong>
 </p>
