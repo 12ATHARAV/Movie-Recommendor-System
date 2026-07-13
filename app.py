@@ -2,6 +2,7 @@ import streamlit as st
 import pickle
 import numpy as np
 import requests
+import os
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 import time
@@ -75,7 +76,18 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-TMDB_API_KEY = "97ba66eeaeb4313ff8c52d09f42fc649"
+# Securely load API Key from Environment or Streamlit Secrets (with fallback for demo deployment)
+def get_tmdb_api_key():
+    key = os.environ.get("TMDB_API_KEY")
+    if not key:
+        try:
+            key = st.secrets.get("TMDB_API_KEY")
+        except Exception:
+            pass
+    return key or "97ba66eeaeb4313ff8c52d09f42fc649"
+
+TMDB_API_KEY = get_tmdb_api_key()
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
     "Accept": "application/json"
