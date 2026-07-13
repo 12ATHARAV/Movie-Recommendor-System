@@ -76,12 +76,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Practical API Key Loader: Uses environment / Streamlit secrets if set, otherwise uses client-side demo key automatically
+# Silent API Key Loader: Only accesses st.secrets if secrets.toml exists on disk to prevent Pyodide/Stlite warning logs
 def get_tmdb_api_key():
     key = os.environ.get("TMDB_API_KEY")
     if not key:
         try:
-            key = st.secrets.get("TMDB_API_KEY")
+            home_secrets = os.path.join(os.path.expanduser("~"), ".streamlit", "secrets.toml")
+            local_secrets = os.path.join(".streamlit", "secrets.toml")
+            if os.path.exists(home_secrets) or os.path.exists(local_secrets):
+                key = st.secrets.get("TMDB_API_KEY")
         except Exception:
             pass
     return key or "97ba66eeaeb4313ff8c52d09f42fc649"
