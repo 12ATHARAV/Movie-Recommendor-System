@@ -12,7 +12,7 @@ st.set_page_config(
     page_title="CineAI | Movie Recommendation System",
     page_icon="🎬",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # Custom Cinema Premium Styling
@@ -76,7 +76,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Zero Hardcoded Secrets: Read from Environment, Streamlit Secrets, or Sidebar Input
+# Practical API Key Loader: Uses environment / Streamlit secrets if set, otherwise uses client-side demo key automatically
 def get_tmdb_api_key():
     key = os.environ.get("TMDB_API_KEY")
     if not key:
@@ -84,18 +84,7 @@ def get_tmdb_api_key():
             key = st.secrets.get("TMDB_API_KEY")
         except Exception:
             pass
-
-    if not key:
-        with st.sidebar:
-            st.markdown("### 🔑 API Configuration")
-            key = st.text_input(
-                "TMDB API Key (v3 auth):",
-                type="password",
-                help="Enter your free TMDB API key from themoviedb.org"
-            )
-            if not key:
-                st.info("💡 Enter your TMDB API Key above to load live movie posters & enable live search.")
-    return key
+    return key or "97ba66eeaeb4313ff8c52d09f42fc649"
 
 TMDB_API_KEY = get_tmdb_api_key()
 
@@ -111,15 +100,8 @@ def get_http_session():
     return session
 
 @st.cache_data(show_spinner=False)
-def fetch_movie_details(movie_id, api_key):
-    if not api_key:
-        return {
-            "poster": "https://via.placeholder.com/500x750/1a1a2e/ffffff?text=No+API+Key",
-            "rating": "N/A",
-            "year": "N/A",
-            "overview": "Please enter a TMDB API Key in the sidebar to view live movie details."
-        }
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}&language=en-US"
+def fetch_movie_details(movie_id):
+    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={TMDB_API_KEY}&language=en-US"
     try:
         session = get_http_session()
         response = session.get(url, headers=HEADERS, timeout=5)
@@ -146,10 +128,8 @@ def fetch_movie_details(movie_id, api_key):
     }
 
 @st.cache_data(show_spinner=False)
-def search_tmdb_live(query, api_key):
-    if not api_key:
-        return []
-    url = f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&query={query}&language=en-US"
+def search_tmdb_live(query):
+    url = f"https://api.themoviedb.org/3/search/movie?api_key={TMDB_API_KEY}&query={query}&language=en-US"
     try:
         session = get_http_session()
         response = session.get(url, headers=HEADERS, timeout=5)
@@ -160,10 +140,8 @@ def search_tmdb_live(query, api_key):
     return []
 
 @st.cache_data(show_spinner=False)
-def fetch_tmdb_recommendations(movie_id, api_key):
-    if not api_key:
-        return []
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}/recommendations?api_key={api_key}&language=en-US"
+def fetch_tmdb_recommendations(movie_id):
+    url = f"https://api.themoviedb.org/3/movie/{movie_id}/recommendations?api_key={TMDB_API_KEY}&language=en-US"
     try:
         session = get_http_session()
         response = session.get(url, headers=HEADERS, timeout=5)
@@ -203,7 +181,7 @@ def load_data():
     except Exception as e:
         return None, None, None
 
-def recommend_ml(movie, movies_list, data, mode, api_key):
+def recommend_ml(movie, movies_list, data, mode):
     movies = movies_list['title'].values
     recommended_movies = []
 
@@ -212,7 +190,7 @@ def recommend_ml(movie, movies_list, data, mode, api_key):
         for m_id in movie_ids:
             matching_rows = movies_list[movies_list['movie_id'] == m_id]
             title = matching_rows.iloc[0]['title'] if not matching_rows.empty else "Unknown Movie"
-            details = fetch_movie_details(m_id, api_key)
+            details = fetch_movie_details(m_id)
             recommended_movies.append({
                 "title": title,
                 "poster": details["poster"],
@@ -228,7 +206,7 @@ def recommend_ml(movie, movies_list, data, mode, api_key):
         for i in movies_list_sorted:
             m_id = movies_list.iloc[i[0]]['movie_id']
             title = movies[i[0]]
-            details = fetch_movie_details(m_id, api_key)
+            details = fetch_movie_details(m_id)
             recommended_movies.append({
                 "title": title,
                 "poster": details["poster"],
@@ -261,7 +239,7 @@ with tab1:
 
         if recommend_btn:
             with st.spinner("Analyzing cinematic DNA & fetching live metadata..."):
-                recs = recommend_ml(selected_movie_name, movies_list, data, mode, TMDB_API_KEY)
+                recs = recommend_ml(selected_movie_name, movies_list, data, mode)
 
             st.markdown("<br>", unsafe_allow_html=True)
             st.markdown(f"### 🍿 Top Recommendations for **{selected_movie_name}**")
@@ -286,36 +264,33 @@ with tab2:
         search_btn = st.button("🔍 Search & Recommend Live", key="live_btn")
 
     if search_query and (search_btn or search_query):
-        if not TMDB_API_KEY:
-            st.warning("⚠️ Please enter your TMDB API Key in the left sidebar to use Live Global Search.")
-        else:
-            with st.spinner(f"Searching global TMDB database for '{search_query}'..."):
-                results = search_tmdb_live(search_query, TMDB_API_KEY)
+        with st.spinner(f"Searching global TMDB database for '{search_query}'..."):
+            results = search_tmdb_live(search_query)
 
-            if results:
-                first_movie = results[0]
-                movie_id = first_movie['id']
-                title = first_movie['title']
-                year = first_movie.get('release_date', '')[:4] if first_movie.get('release_date') else "N/A"
+        if results:
+            first_movie = results[0]
+            movie_id = first_movie['id']
+            title = first_movie['title']
+            year = first_movie.get('release_date', '')[:4] if first_movie.get('release_date') else "N/A"
 
-                st.success(f"Found Match: **{title} ({year})** — fetching global recommendations...")
-                recs = fetch_tmdb_recommendations(movie_id, TMDB_API_KEY)
+            st.success(f"Found Match: **{title} ({year})** — fetching global recommendations...")
+            recs = fetch_tmdb_recommendations(movie_id)
 
-                if recs:
-                    st.markdown("<br>", unsafe_allow_html=True)
-                    st.markdown(f"### 🌐 Global Recommendations for **{title} ({year})**")
-                    st.markdown("<br>", unsafe_allow_html=True)
+            if recs:
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown(f"### 🌐 Global Recommendations for **{title} ({year})**")
+                st.markdown("<br>", unsafe_allow_html=True)
 
-                    cols = st.columns(len(recs))
-                    for idx, col in enumerate(cols):
-                        rec = recs[idx]
-                        with col:
-                            st.image(rec["poster"], use_column_width=True)
-                            st.markdown(f"**{rec['title']}**")
-                            st.caption(f"⭐ {rec['rating']} / 10  •  📅 {rec['year']}")
-                            with st.expander("Storyline"):
-                                st.write(rec["overview"])
-                else:
-                    st.info("No direct recommendations found for this movie yet.")
+                cols = st.columns(len(recs))
+                for idx, col in enumerate(cols):
+                    rec = recs[idx]
+                    with col:
+                        st.image(rec["poster"], use_column_width=True)
+                        st.markdown(f"**{rec['title']}**")
+                        st.caption(f"⭐ {rec['rating']} / 10  •  📅 {rec['year']}")
+                        with st.expander("Storyline"):
+                            st.write(rec["overview"])
             else:
-                st.warning(f"Could not find any movie matching '{search_query}' on TMDB.")
+                st.info("No direct recommendations found for this movie yet.")
+        else:
+            st.warning(f"Could not find any movie matching '{search_query}' on TMDB.")
