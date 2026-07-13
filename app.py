@@ -4,7 +4,6 @@ import numpy as np
 import requests
 import pandas as pd
 import time
-from requests.exceptions import ConnectionError
 
 # Configure page aesthetic
 st.set_page_config(
@@ -99,7 +98,7 @@ def fetch_movie_details(movie_id):
     url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={TMDB_API_KEY}&language=en-US"
     try:
         for _ in range(2):
-            response = requests.get(url, timeout=5)
+            response = requests.get(url, timeout=4)
             if response.status_code == 200:
                 data = response.json()
                 poster_path = data.get('poster_path')
@@ -113,7 +112,7 @@ def fetch_movie_details(movie_id):
                     "year": year,
                     "overview": overview
                 }
-            time.sleep(0.5)
+            time.sleep(0.3)
     except Exception:
         pass
     return {
@@ -126,44 +125,65 @@ def fetch_movie_details(movie_id):
 @st.cache_resource(show_spinner=False)
 def load_data():
     try:
-        # Try loading float16 version first, fallback to standard
+        movies_list = pickle.load(open('movies.pickle', 'rb'))
+        # Fast load: check for top_recs.pkl first (270 KB vs 44 MB!)
+        try:
+            top_recs = pickle.load(open('top_recs.pkl', 'rb'))
+            return movies_list, top_recs, "top_recs"
+        except FileNotFoundError:
+            pass
+
         try:
             similarity = pickle.load(open('similarity_f16.pkl', 'rb'))
         except FileNotFoundError:
             similarity = pickle.load(open('similarity.pickle', 'rb'))
-        movies_list = pickle.load(open('movies.pickle', 'rb'))
-        return movies_list, similarity
+        return movies_list, similarity, "matrix"
     except Exception as e:
         st.error(f"Error loading model files: {e}")
-        return None, None
+        return None, None, None
 
-def recommend(movie, movies_list, similarity):
+def recommend(movie, movies_list, data, mode):
     movies = movies_list['title'].values
-    movie_index = np.where(movies == movie)[0][0]
-    distances = similarity[movie_index]
-    movies_list_sorted = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
-
     recommended_movies = []
-    for i in movies_list_sorted:
-        movie_id = movies_list.iloc[i[0]]['movie_id']
-        title = movies[i[0]]
-        details = fetch_movie_details(movie_id)
-        recommended_movies.append({
-            "title": title,
-            "poster": details["poster"],
-            "rating": details["rating"],
-            "year": details["year"],
-            "overview": details["overview"]
-        })
+
+    if mode == "top_recs":
+        movie_ids = data.get(movie, [])[:5]
+        for m_id in movie_ids:
+            matching_rows = movies_list[movies_list['movie_id'] == m_id]
+            title = matching_rows.iloc[0]['title'] if not matching_rows.empty else "Unknown Movie"
+            details = fetch_movie_details(m_id)
+            recommended_movies.append({
+                "title": title,
+                "poster": details["poster"],
+                "rating": details["rating"],
+                "year": details["year"],
+                "overview": details["overview"]
+            })
+    else:
+        movie_index = np.where(movies == movie)[0][0]
+        distances = data[movie_index]
+        movies_list_sorted = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
+
+        for i in movies_list_sorted:
+            m_id = movies_list.iloc[i[0]]['movie_id']
+            title = movies[i[0]]
+            details = fetch_movie_details(m_id)
+            recommended_movies.append({
+                "title": title,
+                "poster": details["poster"],
+                "rating": details["rating"],
+                "year": details["year"],
+                "overview": details["overview"]
+            })
     return recommended_movies
 
 # Header
 st.markdown('<div class="main-title">🎬 CineAI Recommender</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">AI-Powered Content Similarity Engine using Cosine Similarity & TMDB Live Data</div>', unsafe_allow_html=True)
 
-movies_list, similarity = load_data()
+movies_list, data, mode = load_data()
 
-if movies_list is not None and similarity is not None:
+if movies_list is not None and data is not None:
     movies = movies_list['title'].values
 
     col_select1, col_select2, col_select3 = st.columns([1, 2, 1])
@@ -177,7 +197,7 @@ if movies_list is not None and similarity is not None:
 
     if recommend_btn:
         with st.spinner("Analyzing cinematic DNA & fetching live metadata..."):
-            recs = recommend(selected_movie_name, movies_list, similarity)
+            recs = recommend(selected_movie_name, movies_list, data, mode)
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown(f"### 🍿 Top Recommendations for **{selected_movie_name}**")
@@ -187,10 +207,11 @@ if movies_list is not None and similarity is not None:
         for idx, col in enumerate(cols):
             rec = recs[idx]
             with col:
-                st.image(rec["poster"], use_container_width=True)
+                # Compatible with all Streamlit versions (use_column_width=True)
+                st.image(rec["poster"], use_column_width=True)
                 st.markdown(f"**{rec['title']}**")
                 st.caption(f"⭐ {rec['rating']} / 10  •  📅 {rec['year']}")
                 with st.expander("Storyline"):
                     st.write(rec["overview"])
 else:
-    st.warning("Please ensure `movies.pickle` and `similarity.pickle` are present in the app directory.")
+    st.warning("Please ensure `movies.pickle` and data files are present in the app directory.")
